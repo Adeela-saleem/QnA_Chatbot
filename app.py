@@ -8,6 +8,9 @@ from langchain_groq import ChatGroq
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 from langchain_core.output_parsers import StrOutputParser
 
+# Ek session me kitne sawal allowed hain (free API limit bachane ke liye)
+MAX_QUESTIONS = 20
+
 # ---------------------------------------------------------------
 # 1. Page setup
 # ---------------------------------------------------------------
@@ -33,22 +36,24 @@ if not api_key:
     st.stop()
 
 # ---------------------------------------------------------------
-# 3. Sidebar: model chunna aur chat clear karna
+# 3. Sidebar: model, zubaan, chat clear
 # ---------------------------------------------------------------
 with st.sidebar:
     st.header("Settings")
     model_name = st.selectbox("Model", ["openai/gpt-oss-20b", "openai/gpt-oss-120b"])
+    language = st.selectbox("Jawab ki zubaan", ["English", "Roman Urdu"])
     if st.button("Chat clear karo"):
         st.session_state.messages = []
 
 # ---------------------------------------------------------------
 # 4. Chain (notebook wali hi: prompt -> model -> parser)
+# {language}, {question} aur history khali jagahein hain jo baad me bharti hain.
 # cache_resource: har rerun par dobara na banay, ek baar bane aur yaad rahe
 # ---------------------------------------------------------------
 @st.cache_resource
 def build_chain(model_name, api_key):
     prompt = ChatPromptTemplate.from_messages([
-        ("system", "Tum ek helpful assistant ho. Jawab Roman Urdu me do, simple language me."),
+        ("system", "You are a helpful assistant. Answer in {language}, in simple language."),
         MessagesPlaceholder("history"),
         ("human", "{question}"),
     ])
@@ -77,6 +82,11 @@ for m in st.session_state.messages:
 question = st.chat_input("Apna sawal likho...")
 
 if question:
+    # Soft limit: har sawal-jawab ke 2 messages hote hain
+    if len(st.session_state.messages) >= MAX_QUESTIONS * 2:
+        st.warning("Demo ki limit poori ho gayi. 'Chat clear karo' dabao aur dobara shuru karo.")
+        st.stop()
+
     with st.chat_message("user"):
         st.markdown(question)
 
@@ -85,10 +95,18 @@ if question:
             # stream: jawab lafz ba lafz screen par aata hai
             # history me abhi naya sawal shamil nahi (wo niche append hoga)
             answer = st.write_stream(
-                chain.stream({"question": question, "history": st.session_state.messages})
+                chain.stream({
+                    "question": question,
+                    "history": st.session_state.messages,
+                    "language": language,
+                })
             )
             # Jawab kamyabi se aaya to hi history me save karo
             st.session_state.messages.append({"role": "user", "content": question})
             st.session_state.messages.append({"role": "assistant", "content": answer})
         except Exception as e:
-            st.error(f"Error aaya: {e}")
+            err = str(e)
+            if "429" in err or "rate" in err.lower():
+                st.warning("Free API ki limit poori ho gayi hai. Thori der baad dobara try karo.")
+            else:
+                st.error(f"Error aaya: {err}")
