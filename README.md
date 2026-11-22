@@ -4,8 +4,6 @@ A simple conversational Q&A chatbot built with **LangChain**, **Groq** and **Str
 
 🔗 **Live demo:** [Open the app](https://qnachatbot-j5msjyeskkxdubmahz8smf.streamlit.app/)
 
-![screenshot](screenshot.png)
-
 ## Features
 
 - Multi-turn chat with conversation memory
