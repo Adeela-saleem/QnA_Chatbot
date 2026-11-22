@@ -2,7 +2,7 @@
 
 A simple conversational Q&A chatbot built with **LangChain**, **Groq** and **Streamlit**.
 
-🔗 **Live demo:** [Open the app](YOUR_STREAMLIT_LINK_HERE)
+🔗 **Live demo:** [Open the app](https://qnachatbot-j5msjyeskkxdubmahz8smf.streamlit.app/)
 
 ![screenshot](screenshot.png)
 
@@ -13,6 +13,8 @@ A simple conversational Q&A chatbot built with **LangChain**, **Groq** and **Str
 - Choose the model (`gpt-oss-20b` / `gpt-oss-120b`) from the sidebar
 - Choose the answer language (Roman Urdu / English)
 - Clear-chat button and basic error handling
+
+> **Note:** the demo runs on the Groq free tier, so it may occasionally hit rate limits. Each session is capped at 20 questions.
 
 ## Tech Stack
 
